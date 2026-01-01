@@ -1,12 +1,8 @@
 import graphene
+from crm.schema import CRMQuery  # Import the query from your app
 
-class Query(graphene.ObjectType):
-    # Define the field 'hello' as a String
-    hello = graphene.String()
+# We inherit from CRMQuery and graphene.ObjectType to combine them
+class Query(CRMQuery, graphene.ObjectType):
+    pass
 
-    # The resolver function returns the data for the 'hello' field
-    def resolve_hello(root, info):
-        return "Hello, GraphQL!"
-
-# Create the schema object
 schema = graphene.Schema(query=Query)
