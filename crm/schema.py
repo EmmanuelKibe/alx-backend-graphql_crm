@@ -157,6 +157,21 @@ class Mutation(graphene.ObjectType):
     create_order = CreateOrder.Field()
     bulk_create_customers = BulkCreateCustomers.Field()
 
+class Query(graphene.ObjectType):
+    all_customers = graphene.List(CustomerType)
+    all_products = graphene.List(ProductType)
+    all_orders = graphene.List(OrderType)
+
+    # These "resolver" functions tell Django how to actually get the data
+    def resolve_all_customers(root, info):
+        return Customer.objects.all()
+
+    def resolve_all_products(root, info):
+        return Product.objects.all()
+
+    def resolve_all_orders(root, info):
+        return Order.objects.select_related('customer', 'product').all()
+
 class CRMQuery(graphene.ObjectType):
     hello = graphene.String()
 
