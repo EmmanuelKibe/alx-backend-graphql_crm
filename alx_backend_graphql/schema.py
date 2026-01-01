@@ -1,11 +1,11 @@
 import graphene
-from crm.schema import CRMQuery, Mutation as CRMutation  # Import the query and mutation from your app
+import crm.schema  # Ensure this import is correct
 
-# We inherit from CRMQuery and graphene.ObjectType to combine them
-class Query(CRMQuery, graphene.ObjectType):
+# Your main Query class MUST inherit from crm.schema.Query
+class Query(crm.schema.Query, graphene.ObjectType):
     pass
 
-class Mutation(CRMutation, graphene.ObjectType):
+class Mutation(crm.schema.Mutation, graphene.ObjectType):
     pass
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
