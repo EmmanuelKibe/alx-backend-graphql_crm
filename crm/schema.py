@@ -1,4 +1,161 @@
 import graphene
+from graphene_django import DjangoObjectType
+from .models import Customer, Product, Order
+from django.db import transaction
+import re
+
+# --- Types ---
+class CustomerType(DjangoObjectType):
+    class Meta:
+        model = Customer
+
+class ProductType(DjangoObjectType):
+    class Meta:
+        model = Product
+
+class OrderType(DjangoObjectType):
+    class Meta:
+        model = Order
+
+
+# --- 1. CreateCustomer ---
+class CreateCustomer(graphene.Mutation):
+    class Arguments:
+        first_name = graphene.String(required=True)
+        last_name = graphene.String(required=True)
+        email = graphene.String(required=True)
+        phone_number = graphene.String()
+        address = graphene.String()
+
+    customer = graphene.Field(CustomerType)
+    success = graphene.Boolean()
+
+    def mutate(self, info, first_name, last_name, email, phone_number=None, address=None):
+        # Email uniqueness check
+        if Customer.objects.filter(email=email).exists():
+            raise Exception("A customer with this email already exists.")
+
+        customer = Customer.objects.create(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone_number=phone_number,
+            address=address
+        )
+        return CreateCustomer(customer=customer, success=True)
+
+# --- Bulk Create Customers ---
+class CustomerInput(graphene.InputObjectType):
+    first_name = graphene.String(required=True)
+    last_name = graphene.String(required=True)
+    email = graphene.String(required=True)
+    phone_number = graphene.String()
+    address = graphene.String()
+
+class BulkCreateCustomers(graphene.Mutation):
+    class Arguments:
+        # We accept a LIST of our input template
+        customers_data = graphene.List(CustomerInput, required=True)
+
+    # What we return to the user
+    customers = graphene.List(CustomerType)
+    errors = graphene.List(graphene.String)
+
+    def mutate(self, info, customers_data):
+        success_list = []
+        error_list = []
+
+        for data in customers_data:
+            try:
+                # Use a 'sub-transaction' for each individual customer
+                with transaction.atomic():
+                    # Check uniqueness before saving
+                    if Customer.objects.filter(email=data.email).exists():
+                        raise Exception(f"Email {data.email} is already taken.")
+
+                    new_customer = Customer.objects.create(
+                        first_name=data.first_name,
+                        last_name=data.last_name,
+                        email=data.email,
+                        phone_number=data.get('phone_number'),
+                        address=data.get('address')
+                    )
+                    success_list.append(new_customer)
+            
+            except Exception as e:
+                # If one fails, record the error and keep going with the next one
+                error_list.append(str(e))
+
+        return BulkCreateCustomers(customers=success_list, errors=error_list)
+    
+# --- 2. CreateProduct ---
+class CreateProduct(graphene.Mutation):
+    class Arguments:
+        name = graphene.String(required=True)
+        description = graphene.String()
+        price = graphene.Float(required=True) # graphene.Float maps well to DecimalField
+        stock = graphene.Int(required=True)
+
+    product = graphene.Field(ProductType)
+
+    def mutate(self, info, name, price, stock, description=None):
+        if price <= 0:
+            raise Exception("Price must be greater than zero.")
+        
+        product = Product.objects.create(
+            name=name, 
+            description=description, 
+            price=price, 
+            stock=stock
+        )
+        return CreateProduct(product=product)
+
+# --- 3. CreateOrder ---
+class CreateOrder(graphene.Mutation):
+    class Arguments:
+        customer_id = graphene.ID(required=True)
+        product_id = graphene.ID(required=True)
+        quantity = graphene.Int(required=True)
+
+    order = graphene.Field(OrderType)
+
+    def mutate(self, info, customer_id, product_id, quantity):
+        # 1. Validate Customer
+        try:
+            customer = Customer.objects.get(pk=customer_id)
+        except Customer.DoesNotExist:
+            raise Exception("Customer not found.")
+
+        # 2. Validate Product
+        try:
+            product = Product.objects.get(pk=product_id)
+        except Product.DoesNotExist:
+            raise Exception("Product not found.")
+
+        # 3. Check Stock
+        if product.stock < quantity:
+            raise Exception(f"Not enough stock. Only {product.stock} units available.")
+
+        # 4. Create Order and Update Stock (using a transaction for safety)
+        with transaction.atomic():
+            order = Order.objects.create(
+                customer=customer,
+                product=product,
+                quantity=quantity
+            )
+            
+            # Decrease the product stock
+            product.stock -= quantity
+            product.save()
+
+        return CreateOrder(order=order)
+
+# --- Mutations ---
+class Mutation(graphene.ObjectType):
+    create_customer = CreateCustomer.Field()
+    create_product = CreateProduct.Field()
+    create_order = CreateOrder.Field()
+    bulk_create_customers = BulkCreateCustomers.Field()
 
 class CRMQuery(graphene.ObjectType):
     hello = graphene.String()
