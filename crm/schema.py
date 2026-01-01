@@ -1,5 +1,7 @@
 import graphene
 from graphene_django import DjangoObjectType
+from graphene_django.filter import DjangoFilterConnectionField
+from .filters import CustomerFilter, ProductFilter, OrderFilter
 from .models import Customer, Product, Order
 from django.db import transaction
 import re
@@ -8,15 +10,24 @@ import re
 class CustomerType(DjangoObjectType):
     class Meta:
         model = Customer
-    price = graphene.Float()
+        interfaces = (graphene.relay.Node, )
+        fields = "__all__"
+    
 
 class ProductType(DjangoObjectType):
     class Meta:
         model = Product
+        interfaces = (graphene.relay.Node, )
+        fields = "__all__"
 
+    price = graphene.Float()
+    def resolve_price(self, info):
+        return float(self.price)
 class OrderType(DjangoObjectType):
     class Meta:
         model = Order
+        interfaces = (graphene.relay.Node, )
+        fields = "__all__"
 
 
 # --- 1. CreateCustomer ---
