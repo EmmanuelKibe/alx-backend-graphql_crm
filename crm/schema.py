@@ -8,6 +8,7 @@ import re
 class CustomerType(DjangoObjectType):
     class Meta:
         model = Customer
+    price = graphene.Float()
 
 class ProductType(DjangoObjectType):
     class Meta:
