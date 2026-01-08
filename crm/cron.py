@@ -15,7 +15,7 @@ def log_crm_heartbeat():
             f.write(log_message)
             
         #Perform a simple GraphQL query to ensure the API is responsive
-        from alx-backend-graphql_crm.schema import schema
+        from alx_backend_graphql.schema import schema
         result = schema.execute('{ hello }')
         
         if result.errors:
