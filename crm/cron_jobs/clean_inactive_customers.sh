@@ -1,24 +1,29 @@
 #!/bin/bash
 
-# Navigate to the project root where manage.py lives
-# This ensures the script finds the Django settings
-cd "$(dirname "$0")/../.."
+# 1. Absolute path to your project
+PROJECT_DIR="/mnt/c/Users/alemg/OneDrive/Documents/ALX_Pro Dev BE/alx_backend_graphql_crm"
 
-# Define the log file path
+# 2. Path to the LINUX virtual environment python
+VENV_PYTHON="$PROJECT_DIR/venv_linux/bin/python3"
+
+# 3. Log file location
 LOG_FILE="/tmp/customer_cleanup_log.txt"
 
-# Run the Django shell command
-# We use 'shell -c' to run the Python logic directly
-DELETED_COUNT=$(python3 manage.py shell -c "
+# Navigate to project root
+cd "$PROJECT_DIR"
+
+# Run the command using the Linux Venv Python
+DELETED_COUNT=$($VENV_PYTHON manage.py shell -c "
 from django.utils import timezone
 from crm.models import Customer
 from datetime import timedelta
+from django.db.models import Max
 
+# Find customers whose most recent order was over a year ago
 one_year_ago = timezone.now() - timedelta(days=365)
-# Filter customers with no orders since a year ago and delete them
 deleted, _ = Customer.objects.filter(order__date__lt=one_year_ago).distinct().delete()
 print(deleted)
 ")
 
-# Log the result with a timestamp
+# Log the result
 echo "$(date '+%Y-%m-%d %H:%M:%S') - Deleted $DELETED_COUNT inactive customers" >> "$LOG_FILE"
