@@ -11,4 +11,4 @@ six==1.17.0
 sqlparse==0.5.5
 text-unidecode==1.3
 typing_extensions==4.15.0
-django-contrab
+django-crontab
