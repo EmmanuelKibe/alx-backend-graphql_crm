@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 1. Absolute path to your project
-PROJECT_DIR="/mnt/c/Users/alemg/OneDrive/Documents/ALX_Pro Dev BE/alx_backend_graphql_crm"
+PROJECT_DIR="/mnt/c/Users/alemg/OneDrive/Documents/ALX_Pro Dev BE/alx-backend-graphql_crm"
 
 # 2. Path to the LINUX virtual environment python
 VENV_PYTHON="$PROJECT_DIR/venv_linux/bin/python3"
