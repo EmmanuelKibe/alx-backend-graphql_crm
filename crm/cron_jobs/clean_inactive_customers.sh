@@ -13,7 +13,7 @@ LOG_FILE="/tmp/customer_cleanup_log.txt"
 cd "$PROJECT_DIR"
 
 # Run the command using the Linux Venv Python
-DELETED_COUNT=$($VENV_PYTHON manage.py shell -c "
+DELETED_COUNT=$("$VENV_PYTHON" manage.py shell -c "
 from django.utils import timezone
 from crm.models import Customer
 from datetime import timedelta
