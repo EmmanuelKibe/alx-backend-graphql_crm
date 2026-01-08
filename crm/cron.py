@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 from graphene_django.utils.testing import graphql_query
+from gql.transport.requests import RequestsHTTPTransport
+from gql import gql, Client
 
 def log_crm_heartbeat():
     log_file = "/tmp/crm_heartbeat_log.txt"
