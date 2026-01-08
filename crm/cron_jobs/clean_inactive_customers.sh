@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 1. Absolute path to your project
+# 1. Absolute path to my project
 PROJECT_DIR="/mnt/c/Users/alemg/OneDrive/Documents/ALX_Pro Dev BE/alx-backend-graphql_crm"
 
 # 2. Path to the LINUX virtual environment python
