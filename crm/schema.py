@@ -191,3 +191,33 @@ class CRMQuery(graphene.ObjectType):
         return "Hello, GraphQL!"
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
+
+# 1. Define an Output Type for the list of updated products
+class ProductType(graphene.ObjectType):
+    name = graphene.String()
+    stock = graphene.Int()
+
+class UpdateLowStockProducts(graphene.Mutation):
+    class Arguments:
+        pass # No input arguments needed as it scans the DB
+
+    message = graphene.String()
+    updated_products = graphene.List(ProductType)
+
+    def mutate(self, info):
+        # Find products with stock less than 10
+        low_stock_items = Product.objects.filter(stock__lt=10)
+        updated_list = []
+
+        for product in low_stock_items:
+            product.stock += 10
+            product.save()
+            updated_list.append(ProductType(name=product.name, stock=product.stock))
+
+        return UpdateLowStockProducts(
+            message=f"Successfully restocked {len(updated_list)} products.",
+            updated_products=updated_list
+        )
+
+class Mutation(graphene.ObjectType):
+    update_low_stock_products = UpdateLowStockProducts.Field()
