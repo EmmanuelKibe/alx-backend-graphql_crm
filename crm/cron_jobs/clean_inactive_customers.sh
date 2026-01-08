@@ -21,8 +21,16 @@ from django.db.models import Max
 
 # Find customers whose most recent order was over a year ago
 one_year_ago = timezone.now() - timedelta(days=365)
-deleted, _ = Customer.objects.filter(order__date__lt=one_year_ago).distinct().delete()
-print(deleted)
+inactive_customers = Customer.objects.annotate(
+    last_order=Max('order__order_date')
+).filter(
+    last_order__lt=one_year_ago
+)
+
+# Count and delete inactive customers
+count = inactive_customers.count()
+inactive_customers.delete()
+print(count)
 ")
 
 # Log the result
